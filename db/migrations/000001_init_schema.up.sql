@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS wordlist (
+  word VARCHAR(100) UNIQUE NOT NULL,
+  is_common BOOLEAN NOT NULL DEFAULT false
+)
