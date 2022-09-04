@@ -130,26 +130,33 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 			return
 		}
 
-		err = utils.SendMessageToHopChannel("PLAYER_ANSWER", channelID, map[string]interface{}{
-			"player": state.CurrentPlayer,
-			"word":   word,
-		})
-		if err != nil {
-			resp["error"] = err.Error()
-			utils.JSON(w, http.StatusBadRequest, resp)
-			return
-		}
-
 		if state.Stage == 1 {
 			log.Println(state.Stage1Word, word)
-			if utils.IsLastLetterMatching(state.Stage1Word, word) {
+			exists, err := queries.IsPresent(r.Context(), word)
+			if err != nil {
+				resp["error"] = err.Error()
+				utils.JSON(w, http.StatusBadRequest, resp)
+				return
+			}
+			if utils.IsLastLetterMatching(state.Stage1Word, word) && exists {
 				log.Println("correct")
 				player_idx := utils.FindPlayer(state.CurrentPlayer, state.Players)
+        currentScore := state.Players[player_idx].Score
 				state.Players[player_idx].Score += int(timeRemaining.Seconds())*10 + len(word)
 				state.Stage1Word = word
 				resp["status"] = "correct"
+				err = utils.SendMessageToHopChannel("PLAYER_ANSWER", channelID, map[string]interface{}{
+					"player": state.CurrentPlayer,
+					"word":   word,
+					"score":  state.Players[player_idx].Score,
+          "scoreDelta":state.Players[player_idx].Score - currentScore, 
+				})
 			} else {
 				resp["status"] = "incorrect"
+				err = utils.SendMessageToHopChannel("PLAYER_ANSWER", channelID, map[string]interface{}{
+					"player": state.CurrentPlayer,
+					"word":   word,
+				})
 			}
 		}
 
@@ -159,6 +166,12 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 
 		if state.Stage == 3 {
 
+		}
+
+		if err != nil {
+			resp["error"] = err.Error()
+			utils.JSON(w, http.StatusBadRequest, resp)
+			return
 		}
 
 		if len(state.YetToPlay) == 0 {
@@ -179,8 +192,6 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 		} else {
 			// Pick a random player from Players
 			state.CurrentPlayer, state.YetToPlay = utils.GetCurrentPlayer(state.YetToPlay)
-      log.Println("Curpl", state.CurrentPlayer)
-      log.Println("Yettoplay", state.YetToPlay)
 		}
 
 		state.PlayerStartTime = time.Now().Add(time.Second * 5)
