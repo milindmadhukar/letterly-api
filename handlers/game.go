@@ -12,6 +12,7 @@ func StartGame() http.HandlerFunc {
 		var resp map[string]interface{} = make(map[string]interface{})
 		hostSessionID := r.Header.Get("sessionID")
     channelID := r.URL.Query().Get("channelID")
+    roundsPerStage := r.URL.Query().Get("roundsPerStage")
     if hostSessionID == "" {
       resp["error"] = "No sessionID provided."
       utils.JSON(w, http.StatusBadRequest, resp)
@@ -25,6 +26,9 @@ func StartGame() http.HandlerFunc {
     newState := map[string]interface{}{
       "game":"started",
       "startTime" : time.Now(),
+      "stage": 1,
+      "round": 1,
+      "roundsPerStage": roundsPerStage,
     }
 		err := utils.UpdateHopChannel(channelID, newState)
 		if err != nil {

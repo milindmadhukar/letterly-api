@@ -86,6 +86,7 @@ func CreateHopChannel(hostSessionID, username string) (*hopChannel, error) {
 			"players": map[string]models.Player{
 				hostSessionID: player,
 			},
+      "playerCount": 1,
 		},
 	})
 	if err != nil {

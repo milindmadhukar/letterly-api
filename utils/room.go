@@ -1,9 +1,12 @@
 package utils
 
-import "math/rand"
+import (
+	"math/rand"
+	"time"
+)
 
 func GenerateRoomCode(length int) string {
-  // Generate a random room code
+  rand.Seed(time.Now().UnixNano())
   var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
   b := make([]rune, length)
   for i := range b {
