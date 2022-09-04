@@ -16,7 +16,9 @@ func (s *Server) HandleRoutes(mainRouter *chi.Mux) {
   roomRouter := chi.NewRouter()
   roomRouter.Get("/{roomID}", handlers.GetRoom())
   roomRouter.Post("/", handlers.CreateRoom())
-  roomRouter.Delete("/delete/{roomID}", handlers.DeleteRoom())
+  roomRouter.Delete("/{roomID}", handlers.DeleteRoom())
+  // roomRouter.Get("/{roomID}/state", handlers.GetRoomState())
+  roomRouter.Post("/{roomID}/join", handlers.JoinRoom())
   // roomRouter.Get("/send/{roomID}/{message}", handlers.SendMessageToRoom())
   mainRouter.Mount("/room", roomRouter)
 

@@ -22,8 +22,8 @@ type hopResponse struct {
 		Code    string `json:"code"`
 		Message string `json:"message"`
 	} `json:"error,omitempty"`
-  Message string `json:"message,omitempty"`
-  StatusCode string `json:"statusCode,omitempty"`
+	Message    string `json:"message,omitempty"`
+	StatusCode string `json:"statusCode,omitempty"`
 }
 
 type hopChannel struct {
@@ -72,29 +72,27 @@ func ExecuteHopRequest(endpoint, reqMethod string, reqBody io.Reader, params map
 }
 
 func CreateHopChannel(hostSessionID, username string) (*hopChannel, error) {
+	state := models.ChannelState{
+		Game:        "created",
+		Host:        hostSessionID,
+		PlayerCount: 0,
+		Players: []models.Player{{
+			SessionID: hostSessionID,
+			UserName:  username,
+			Score:     0,
+			IsPlaying: false,
+		}},
+	}
 	reqBody, err := json.Marshal(map[string]interface{}{
 		"type": "unprotected",
-		"state": map[string]interface{}{
-			"game": "created",
-			"host": hostSessionID,
-			// Create a state players object as a map of sessionID to player name
-			"players": []models.Player{
-        {
-          SessionID: hostSessionID,
-        	UserName:  username,
-        	Score:     0,
-        	IsPlaying: false,
-        },
-			},
-      "playerCount": 1,
-		},
+		"state": state,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	resp, err := ExecuteHopRequest(
-		"channels/" + GenerateRoomCode(8),
+		"channels/"+GenerateRoomCode(8),
 		"PUT",
 		bytes.NewBuffer(reqBody),
 		map[string]string{
@@ -145,8 +143,8 @@ func DeleteHopChannel(roomID string) error {
 	return nil
 }
 
-func UpdateHopChannel(roomID string, state map[string]interface{}) error {
-	reqBody, err := json.Marshal(state)
+func UpdateHopChannel(roomID string, state *models.ChannelState) error {
+	reqBody, err := json.Marshal(*state)
 	if err != nil {
 		return err
 	}
@@ -191,4 +189,17 @@ func SendMessageToHopChannel(event string, roomID string, data map[string]interf
 		return err
 	}
 	return nil
+}
+
+func GetChannelState(channelID string) (*models.ChannelState, error) {
+	channel, err := GetHopChannel(channelID)
+	if err != nil {
+		return nil, err
+	}
+	var state models.ChannelState
+	if err := json.Unmarshal(channel.State, &state); err != nil {
+		return nil, err
+	}
+
+	return &state, nil
 }
