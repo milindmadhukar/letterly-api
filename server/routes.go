@@ -17,14 +17,12 @@ func (s *Server) HandleRoutes(mainRouter *chi.Mux) {
   roomRouter.Get("/{roomID}", handlers.GetRoom())
   roomRouter.Post("/", handlers.CreateRoom())
   roomRouter.Delete("/{roomID}", handlers.DeleteRoom())
-  // roomRouter.Get("/{roomID}/state", handlers.GetRoomState())
   roomRouter.Post("/{roomID}/join", handlers.JoinRoom())
   // roomRouter.Get("/send/{roomID}/{message}", handlers.SendMessageToRoom())
   mainRouter.Mount("/room", roomRouter)
 
   gameRouter := chi.NewRouter()
   gameRouter.Post("/start", handlers.StartGame())
-
   mainRouter.Mount("/game", gameRouter)
 
 }

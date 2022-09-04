@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -136,12 +135,3 @@ func JoinRoom() http.HandlerFunc {
     utils.JSON(w, http.StatusOK, resp)
   }
 }
-
-func GetRoomState() http.HandlerFunc {
-  return func(w http.ResponseWriter, r *http.Request) {
-    // var resp map[string]interface{} = make(map[string]interface{})
-    roomID := chi.URLParam(r, "roomID")
-    utils.GetChannelState(roomID)
-  }
-}
-
