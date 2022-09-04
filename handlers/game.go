@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/touch-some-grass-bro/letterly-api/utils"
 )
 
@@ -11,7 +10,7 @@ func StartGame() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var resp map[string]interface{} = make(map[string]interface{})
 		hostSessionID := r.Header.Get("sessionID")
-    channelID := chi.URLParam(r, "channelID")
+    channelID := r.URL.Query().Get("channelID")
     if hostSessionID == "" {
       resp["error"] = "No sessionID provided."
       utils.JSON(w, http.StatusBadRequest, resp)

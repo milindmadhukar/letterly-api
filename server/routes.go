@@ -23,4 +23,6 @@ func (s *Server) HandleRoutes(mainRouter *chi.Mux) {
   gameRouter := chi.NewRouter()
   gameRouter.Post("/start", handlers.StartGame())
 
+  mainRouter.Mount("/game", gameRouter)
+
 }
