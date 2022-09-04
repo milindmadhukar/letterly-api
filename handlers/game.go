@@ -143,7 +143,6 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 			if utils.IsLastLetterMatching(state.Stage1Word, word) {
 				player_idx := utils.FindPlayer(state.CurrentPlayer, state.Players)
 				state.Players[player_idx].Score += int(timeRemaining.Seconds())*10 + len(word)
-        timeRemain
 				state.Stage1Word = word
 				resp["status"] = "correct"
 			}
