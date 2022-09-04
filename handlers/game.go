@@ -5,10 +5,11 @@ import (
 	"strconv"
 	"time"
 
+	db "github.com/touch-some-grass-bro/letterly-api/db/sqlc"
 	"github.com/touch-some-grass-bro/letterly-api/utils"
 )
 
-func StartGame() http.HandlerFunc {
+func StartGame(queries *db.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var resp map[string]interface{} = make(map[string]interface{})
 		hostSessionID := r.Header.Get("sessionID")
@@ -59,6 +60,15 @@ func StartGame() http.HandlerFunc {
 		// Pick a random player from Players
 		state.CurrentPlayer, state.YetToPlay = utils.GetCurrentPlayer(state.YetToPlay)
 
+		randomWord, err := queries.GetRandomWord(r.Context(), "6")
+		if err != nil {
+			resp["error"] = err.Error()
+			utils.JSON(w, http.StatusBadRequest, resp)
+			return
+		}
+
+		state.Stage1Word = randomWord
+
 		state.PlayerStartTime = time.Now()
 		state.PlayerEndTime = state.StartTime.Add(time.Second * 10)
 
@@ -72,7 +82,7 @@ func StartGame() http.HandlerFunc {
 	}
 }
 
-func AnswerQuestion() http.HandlerFunc {
+func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var resp map[string]interface{} = make(map[string]interface{})
 		sessionID := r.Header.Get("sessionID")
@@ -123,15 +133,36 @@ func AnswerQuestion() http.HandlerFunc {
 			return
 		}
 
-		// TODO: Implement logic to check if the word is valid and calculate time
+		if utils.IsLastLetterMatching(state.Stage1Word, word) {
+			player_idx := utils.FindPlayer(state.CurrentPlayer, state.Players)
+			state.Players[player_idx].Score += int(timeRemaining)*10 + len(word)
+      resp["status"] = "correct"
+		}
 
-		// TODO: Calculate points
+		if len(state.YetToPlay) == 0 {
+			if state.Round >= state.RoundsPerStage {
+				if state.Stage >= 3 {
+					state.Game = "finished"
+					state.Stage = 0
+					state.Round = 0
+				} else {
+					state.Stage++
+					state.Round = 0
+				}
+			}
+			state.Round++
 
-		// Pick a random player from Players
-		state.CurrentPlayer, state.YetToPlay = utils.GetCurrentPlayer(state.YetToPlay)
+			if state.Stage == 1 {
+				state.Stage1Word = word
+			}
+			state.YetToPlay = utils.GetPlayingPlayers(state.Players)
+		} else {
+			// Pick a random player from Players
+			state.CurrentPlayer, state.YetToPlay = utils.GetCurrentPlayer(state.YetToPlay)
+		}
 
-    state.PlayerStartTime = time.Now().Add(time.Second * 5)
-    state.PlayerEndTime = state.PlayerStartTime.Add(time.Second * 10)
+		state.PlayerStartTime = time.Now().Add(time.Second * 5)
+		state.PlayerEndTime = state.PlayerStartTime.Add(time.Second * 10)
 
 		if err := utils.UpdateHopChannel(channelID, state); err != nil {
 			resp["error"] = err.Error()
@@ -139,11 +170,12 @@ func AnswerQuestion() http.HandlerFunc {
 			return
 		}
 		resp["success"] = "You answered."
+    resp["status"] = "incorrect"
 		utils.JSON(w, http.StatusOK, resp)
 	}
 }
 
-func GetNextPlayer() http.HandlerFunc {
+func GetNextPlayer(queries *db.Queries) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var resp map[string]interface{} = make(map[string]interface{})
 		channelID := r.URL.Query().Get("channelID")
@@ -156,9 +188,36 @@ func GetNextPlayer() http.HandlerFunc {
 		}
 
 		// Pick a random player from Players
-		state.CurrentPlayer, state.YetToPlay = utils.GetCurrentPlayer(state.YetToPlay)
-    state.PlayerStartTime = time.Now().Add(time.Second * 5)
-    state.PlayerEndTime = state.PlayerStartTime.Add(time.Second * 10)
+
+		if len(state.YetToPlay) == 0 {
+			if state.Round >= state.RoundsPerStage {
+				if state.Stage >= 3 {
+					state.Game = "finished"
+					state.Stage = 0
+					state.Round = 0
+				} else {
+					state.Stage++
+					state.Round = 0
+				}
+			}
+			state.Round++
+			if state.Stage == 1 {
+
+				randomWord, err := queries.GetRandomWord(r.Context(), "6")
+				if err != nil {
+					resp["error"] = err.Error()
+					utils.JSON(w, http.StatusBadRequest, resp)
+					return
+				}
+				state.Stage1Word = randomWord
+			}
+			state.YetToPlay = utils.GetPlayingPlayers(state.Players)
+		} else {
+			state.CurrentPlayer, state.YetToPlay = utils.GetCurrentPlayer(state.YetToPlay)
+		}
+
+		state.PlayerStartTime = time.Now().Add(time.Second * 5)
+		state.PlayerEndTime = state.PlayerStartTime.Add(time.Second * 10)
 
 		if err := utils.UpdateHopChannel(channelID, state); err != nil {
 			resp["error"] = err.Error()
@@ -170,5 +229,3 @@ func GetNextPlayer() http.HandlerFunc {
 		utils.JSON(w, http.StatusOK, resp)
 	}
 }
-
-

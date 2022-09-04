@@ -15,4 +15,5 @@ type ChannelState struct {
 	YetToPlay       []string  `json:"yetToPlay,omitempty"`
 	PlayerStartTime time.Time `json:"playerStartTime,omitempty"`
 	PlayerEndTime   time.Time `json:"playerEndTime,omitempty"`
+	Stage1Word      string    `json:"stage1Word,omitempty"`
 }

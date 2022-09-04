@@ -31,6 +31,15 @@ func GetCurrentPlayer(players []string) (string, []string) {
 
 }
 
+func FindPlayer(sessionID string, players []models.Player) int {
+  for idx, player := range players {
+    if player.SessionID == sessionID {
+      return idx
+    }
+  }
+  return -1
+}
+
 func IsUserInGame(sessionID string, players []models.Player) bool {
   for _, player := range players {
     if player.SessionID == sessionID {
