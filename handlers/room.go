@@ -117,6 +117,14 @@ func JoinRoom() http.HandlerFunc {
       utils.JSON(w, http.StatusBadRequest, resp)
       return
     }
+
+
+    if utils.IsUserInGame(sessionID, state.Players) {
+      resp["error"] = "User is already in a game."
+      utils.JSON(w, http.StatusBadRequest, resp)
+      return
+    }
+
     state.PlayerCount += 1
     state.Players = append(state.Players, models.Player{
     	SessionID: sessionID,

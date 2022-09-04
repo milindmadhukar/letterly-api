@@ -31,6 +31,15 @@ func GetCurrentPlayer(players []string) (string, []string) {
 
 }
 
+func IsUserInGame(sessionID string, players []models.Player) bool {
+  for _, player := range players {
+    if player.SessionID == sessionID {
+      return true
+    }
+  }
+  return false
+}
+
 func removeIndex(s []string, index int) []string {
   return append(s[:index], s[index+1:]...)
 }
