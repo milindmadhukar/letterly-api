@@ -142,11 +142,20 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 		if state.Stage == 1 {
 			if utils.IsLastLetterMatching(state.Stage1Word, word) {
 				player_idx := utils.FindPlayer(state.CurrentPlayer, state.Players)
-				state.Players[player_idx].Score += int(timeRemaining)*10 + len(word)
+				state.Players[player_idx].Score += int(timeRemaining.Seconds())*10 + len(word)
+        timeRemain
 				state.Stage1Word = word
 				resp["status"] = "correct"
 			}
 		}
+
+    if state.Stage == 2 {
+
+    }
+
+    if state.Stage == 3 {
+
+    }
 
 		if len(state.YetToPlay) == 0 {
 			if state.Round >= state.RoundsPerStage {
@@ -218,7 +227,6 @@ func GetNextPlayer(queries *db.Queries) http.HandlerFunc {
 				}
 				state.Stage1Word = randomWord
 			}
-			state.YetToPlay = utils.GetPlayingPlayers(state.Players)
 		} else {
 			state.CurrentPlayer, state.YetToPlay = utils.GetCurrentPlayer(state.YetToPlay)
 		}

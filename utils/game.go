@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"log"
 	"math/rand"
 	"time"
 
@@ -22,12 +23,19 @@ func GetCurrentPlayer(players []string) (string, []string) {
   idx := rand.Intn(len(players))
   // Remove element at idx
   currPlayer := players[idx]
+
   remaining := removeIndex(players, idx)
+
+  log.Println("IDX", idx)
+  log.Println("CURR", currPlayer)
+  log.Println("Players", players)
+  log.Println("REM", remaining)
+
   remainingSessions := make([]string, 0)
+
   for _, player := range remaining {
    remainingSessions = append(remainingSessions, player)
   }
-
   return currPlayer, remainingSessions
 
 }
