@@ -9,6 +9,21 @@ import (
 	"context"
 )
 
+const getRandomCommonWord = `-- name: GetRandomCommonWord :one
+SELECT word
+FROM wordlist
+WHERE is_common = true
+ORDER BY random()
+LIMIT 1
+`
+
+func (q *Queries) GetRandomCommonWord(ctx context.Context) (string, error) {
+	row := q.db.QueryRowContext(ctx, getRandomCommonWord)
+	var word string
+	err := row.Scan(&word)
+	return word, err
+}
+
 const getRandomWord = `-- name: GetRandomWord :one
 SELECT word
 FROM wordlist
