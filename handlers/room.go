@@ -68,7 +68,7 @@ func UpdateRoom() http.HandlerFunc {
     var resp map[string]interface{} = make(map[string]interface{})
     roomID := chi.URLParam(r, "roomID")
     stateValue := r.Header.Get("state")
-    var state map[string]string = make(map[string]string)
+    var state map[string]interface{} = make(map[string]interface{})
     if err := json.Unmarshal([]byte(stateValue), &state); err != nil {
       resp["error"] = err.Error()
       utils.JSON(w, http.StatusBadRequest, resp)
@@ -84,7 +84,6 @@ func UpdateRoom() http.HandlerFunc {
     utils.JSON(w, http.StatusOK, resp)
   }
 }
-
 // WARN: This is for testing only
 func SendMessageToRoom() http.HandlerFunc {
   return func(w http.ResponseWriter, r *http.Request) {

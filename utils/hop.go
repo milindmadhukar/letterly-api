@@ -22,6 +22,8 @@ type hopResponse struct {
 		Code    string `json:"code"`
 		Message string `json:"message"`
 	} `json:"error,omitempty"`
+  Message string `json:"message,omitempty"`
+  StatusCode string `json:"statusCode,omitempty"`
 }
 
 type hopChannel struct {
@@ -91,8 +93,8 @@ func CreateHopChannel(hostSessionID, username string) (*hopChannel, error) {
 	}
 
 	resp, err := ExecuteHopRequest(
-		"channels",
-		"POST",
+		"channels/" + GenerateRoomCode(8),
+		"PUT",
 		bytes.NewBuffer(reqBody),
 		map[string]string{
 			"project": models.Config.API.HopProjectID,
@@ -142,17 +144,14 @@ func DeleteHopChannel(roomID string) error {
 	return nil
 }
 
-func UpdateHopChannel(roomID string, state map[string]string) error {
-	reqBody, err := json.Marshal(map[string]interface{}{
-		"type":  "unprotected",
-		"state": state,
-	})
+func UpdateHopChannel(roomID string, state map[string]interface{}) error {
+	reqBody, err := json.Marshal(state)
 	if err != nil {
 		return err
 	}
 
 	resp, err := ExecuteHopRequest(
-		"channels/"+roomID,
+		"channels/"+roomID+"/state",
 		"PATCH",
 		bytes.NewBuffer(reqBody),
 		map[string]string{

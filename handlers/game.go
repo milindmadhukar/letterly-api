@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/touch-some-grass-bro/letterly-api/utils"
 )
@@ -21,8 +22,9 @@ func StartGame() http.HandlerFunc {
       utils.JSON(w, http.StatusBadRequest, resp)
       return
     }
-    newState := map[string]string{
+    newState := map[string]interface{}{
       "game":"started",
+      "startTime" : time.Now(),
     }
 		err := utils.UpdateHopChannel(channelID, newState)
 		if err != nil {
