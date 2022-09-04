@@ -34,3 +34,5 @@ type MeaningResponse struct {
   Synonyms   []string `json:"synonyms"`
   Antonyms   []string `json:"antonyms"`
 }
+
+var Syllables []string = []string{"ock", "king", "ist", "pen", "lic", "cry", "hol", "ary", "bal", "cal", "ant", "lar"}

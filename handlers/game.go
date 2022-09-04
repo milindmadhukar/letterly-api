@@ -1,12 +1,14 @@
 package handlers
 
 import (
-	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	db "github.com/touch-some-grass-bro/letterly-api/db/sqlc"
+	"github.com/touch-some-grass-bro/letterly-api/models"
 	"github.com/touch-some-grass-bro/letterly-api/utils"
 )
 
@@ -69,6 +71,10 @@ func StartGame(queries *db.Queries) http.HandlerFunc {
 		}
 
 		state.Stage1Word = randomWord
+    rand.Seed(time.Now().UnixNano())
+    randomSylabble := models.Syllables[rand.Intn(len(models.Syllables))]
+
+    state.Stage2Word = randomSylabble
 
 		state.PlayerStartTime = time.Now()
 		state.PlayerEndTime = state.StartTime.Add(time.Second * 10)
@@ -130,26 +136,25 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 			return
 		}
 
+		exists, err := queries.IsPresent(r.Context(), word)
+		if err != nil {
+			resp["error"] = err.Error()
+			utils.JSON(w, http.StatusBadRequest, resp)
+			return
+		}
+
 		if state.Stage == 1 {
-			log.Println(state.Stage1Word, word)
-			exists, err := queries.IsPresent(r.Context(), word)
-			if err != nil {
-				resp["error"] = err.Error()
-				utils.JSON(w, http.StatusBadRequest, resp)
-				return
-			}
 			if utils.IsLastLetterMatching(state.Stage1Word, word) && exists {
-				log.Println("correct")
 				player_idx := utils.FindPlayer(state.CurrentPlayer, state.Players)
-        currentScore := state.Players[player_idx].Score
+				currentScore := state.Players[player_idx].Score
 				state.Players[player_idx].Score += int(timeRemaining.Seconds())*10 + len(word)
 				state.Stage1Word = word
 				resp["status"] = "correct"
 				err = utils.SendMessageToHopChannel("PLAYER_ANSWER", channelID, map[string]interface{}{
-					"player": state.CurrentPlayer,
-					"word":   word,
-					"score":  state.Players[player_idx].Score,
-          "scoreDelta":state.Players[player_idx].Score - currentScore, 
+					"player":     state.CurrentPlayer,
+					"word":       word,
+					"score":      state.Players[player_idx].Score,
+					"scoreDelta": state.Players[player_idx].Score - currentScore,
 				})
 			} else {
 				resp["status"] = "incorrect"
@@ -161,8 +166,28 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 		}
 
 		if state.Stage == 2 {
-
-		}
+      if strings.Contains(word, state.Stage2Word) && exists {
+				player_idx := utils.FindPlayer(state.CurrentPlayer, state.Players)
+				currentScore := state.Players[player_idx].Score
+				state.Players[player_idx].Score += int(timeRemaining.Seconds())*10 + len(word)
+        rand.Seed(time.Now().UnixNano())
+        randomSylabble := models.Syllables[rand.Intn(len(models.Syllables))]
+        state.Stage2Word = randomSylabble
+				resp["status"] = "correct"
+				err = utils.SendMessageToHopChannel("PLAYER_ANSWER", channelID, map[string]interface{}{
+					"player":     state.CurrentPlayer,
+					"word":       word,
+					"score":      state.Players[player_idx].Score,
+					"scoreDelta": state.Players[player_idx].Score - currentScore,
+				})
+		} else {
+        resp["status"] = "incorrect"
+				err = utils.SendMessageToHopChannel("PLAYER_ANSWER", channelID, map[string]interface{}{
+					"player":     state.CurrentPlayer,
+					"word":       word,
+				})
+      }
+    }
 
 		if state.Stage == 3 {
 
@@ -219,9 +244,6 @@ func GetNextPlayer(queries *db.Queries) http.HandlerFunc {
 			utils.JSON(w, http.StatusBadRequest, resp)
 			return
 		}
-
-		log.Println("YET", state.YetToPlay)
-
 		// Pick a random player from Players
 
 		if len(state.YetToPlay) == 0 {
@@ -241,7 +263,6 @@ func GetNextPlayer(queries *db.Queries) http.HandlerFunc {
 			state.CurrentPlayer, state.YetToPlay = utils.GetCurrentPlayer(state.YetToPlay)
 
 			if state.Stage == 1 {
-
 				randomWord, err := queries.GetRandomWord(r.Context(), "6")
 				if err != nil {
 					resp["error"] = err.Error()
@@ -250,6 +271,16 @@ func GetNextPlayer(queries *db.Queries) http.HandlerFunc {
 				}
 				state.Stage1Word = randomWord
 			}
+      if state.Stage == 2 {
+        rand.Seed(time.Now().UnixNano())
+        idx := rand.Intn(len(models.Syllables))
+        state.Stage2Word = models.Syllables[idx]
+      }
+
+      if state.Stage == 3 {
+        //TODO: fill this
+      }
+
 		} else {
 			state.CurrentPlayer, state.YetToPlay = utils.GetCurrentPlayer(state.YetToPlay)
 		}
