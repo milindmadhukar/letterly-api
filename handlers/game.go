@@ -179,6 +179,8 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 		} else {
 			// Pick a random player from Players
 			state.CurrentPlayer, state.YetToPlay = utils.GetCurrentPlayer(state.YetToPlay)
+      log.Println("Curpl", state.CurrentPlayer)
+      log.Println("Yettoplay", state.YetToPlay)
 		}
 
 		state.PlayerStartTime = time.Now().Add(time.Second * 5)
