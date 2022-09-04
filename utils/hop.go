@@ -59,20 +59,28 @@ func ExecuteHopRequest(endpoint, reqMethod string, reqBody io.Reader, params map
 	// log.Println("Response from hop", bodyString)
 
 	if err := json.NewDecoder(hopResp.Body).Decode(&resp); err != nil {
-    if err.Error() == "EOF" {
-      return &hopResponse{}, nil
-    }
-    log.Println("Error decoding hop response:", err)
-    return nil, err
+		if err.Error() == "EOF" {
+			return &hopResponse{}, nil
+		}
+		log.Println("Error decoding hop response:", err)
+		return nil, err
 	}
 
 	return resp, nil
 }
 
-func CreateHopChannel() (*hopChannel, error) {
+func CreateHopChannel(hostSessionID, username string) (*hopChannel, error) {
+	// Create a map of players with session ID to username
 	reqBody, err := json.Marshal(map[string]interface{}{
-		"type":  "unprotected",
-		"state": map[string]string{"game": "created"},
+		"type": "unprotected",
+		"state": map[string]interface{}{
+			"game": "created",
+			"host": hostSessionID,
+			// Create a state players object as a map of sessionID to player name
+			"players": map[string]string{
+				hostSessionID: username,
+			},
+		},
 	})
 	if err != nil {
 		return nil, err

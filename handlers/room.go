@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -12,10 +11,17 @@ import (
 func CreateRoom() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var resp map[string]interface{} = make(map[string]interface{})
-    // TODO: Add to database?
 		hostSessionID := r.Header.Get("sessionID")
-		log.Println("Session ID", hostSessionID)
-		room, err := utils.CreateHopChannel()
+    userName := r.URL.Query().Get("userName")
+    if hostSessionID == "" {
+      resp["error"] = "No sessionID provided."
+      utils.JSON(w, http.StatusBadRequest, resp)
+      return
+    }
+    if userName == "" {
+      userName = "Anonymous"
+    }
+		room, err := utils.CreateHopChannel(hostSessionID, userName)
 		if err != nil {
       resp["error"] = err.Error()
 			utils.JSON(w, http.StatusBadRequest, resp)
