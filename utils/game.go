@@ -9,55 +9,53 @@ import (
 )
 
 func GetPlayingPlayers(players []models.Player) []string {
-  playing := make([]string, 0)
-  for _, player := range players {
-    if player.IsPlaying {
-      playing = append(playing, player.SessionID)
-    }
-  }
-  return playing
+	playing := make([]string, 0)
+	for _, player := range players {
+		if player.IsPlaying {
+			playing = append(playing, player.SessionID)
+		}
+	}
+	return playing
 }
 
 func GetCurrentPlayer(players []string) (string, []string) {
-  rand.Seed(time.Now().UnixNano())
-  idx := rand.Intn(len(players))
-  // Remove element at idx
-  currPlayer := players[idx]
+	rand.Seed(time.Now().UnixNano())
+	idx := rand.Intn(len(players))
+	// Remove element at idx
+	currPlayer := players[idx]
 
-  remaining := removeIndex(players, idx)
+	remaining := removeIndex(players, idx)
 
-  log.Println("IDX", idx)
-  log.Println("CURR", currPlayer)
-  log.Println("Players", players)
-  log.Println("REM", remaining)
+	log.Println("IDX", idx)
+	log.Println("CURR", currPlayer)
+	log.Println("Players", players)
 
-  remainingSessions := make([]string, 0)
+	remainingSessions := make([]string, 0)
 
-  for _, player := range remaining {
-   remainingSessions = append(remainingSessions, player)
-  }
-  return currPlayer, remainingSessions
-
+	for _, player := range remaining {
+		remainingSessions = append(remainingSessions, player)
+	}
+	return currPlayer, remainingSessions
 }
 
 func FindPlayer(sessionID string, players []models.Player) int {
-  for idx, player := range players {
-    if player.SessionID == sessionID {
-      return idx
-    }
-  }
-  return -1
+	for idx, player := range players {
+		if player.SessionID == sessionID {
+			return idx
+		}
+	}
+	return -1
 }
 
 func IsUserInGame(sessionID string, players []models.Player) bool {
-  for _, player := range players {
-    if player.SessionID == sessionID {
-      return true
-    }
-  }
-  return false
+	for _, player := range players {
+		if player.SessionID == sessionID {
+			return true
+		}
+	}
+	return false
 }
 
 func removeIndex(s []string, index int) []string {
-  return append(s[:index], s[index+1:]...)
+	return append(s[:index], s[index+1:]...)
 }

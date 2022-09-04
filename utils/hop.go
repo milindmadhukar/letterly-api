@@ -84,7 +84,7 @@ func CreateHopChannel(hostSessionID, username string) (*hopChannel, error) {
 		}},
 	}
 	reqBody, err := json.Marshal(map[string]interface{}{
-		"type": "unprotected",
+		"type":  "unprotected",
 		"state": state,
 	})
 	if err != nil {
@@ -151,7 +151,7 @@ func UpdateHopChannel(roomID string, state *models.ChannelState) error {
 
 	resp, err := ExecuteHopRequest(
 		"channels/"+roomID+"/state",
-		"PATCH",
+		"PUT",
 		bytes.NewBuffer(reqBody),
 		map[string]string{
 			"project": models.Config.API.HopProjectID,

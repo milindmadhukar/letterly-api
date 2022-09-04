@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -106,11 +107,11 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 			return
 		}
 
-    if word == "" {
-      resp["error"] = "No word provided."
-      utils.JSON(w, http.StatusBadRequest, resp)
-      return
-    }
+		if word == "" {
+			resp["error"] = "No word provided."
+			utils.JSON(w, http.StatusBadRequest, resp)
+			return
+		}
 
 		timeRemaining := state.PlayerEndTime.Sub(time.Now())
 		if timeRemaining < 0 {
@@ -140,21 +141,25 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 		}
 
 		if state.Stage == 1 {
+			log.Println(state.Stage1Word, word)
 			if utils.IsLastLetterMatching(state.Stage1Word, word) {
+				log.Println("correct")
 				player_idx := utils.FindPlayer(state.CurrentPlayer, state.Players)
 				state.Players[player_idx].Score += int(timeRemaining.Seconds())*10 + len(word)
 				state.Stage1Word = word
 				resp["status"] = "correct"
+			} else {
+				resp["status"] = "incorrect"
 			}
 		}
 
-    if state.Stage == 2 {
+		if state.Stage == 2 {
 
-    }
+		}
 
-    if state.Stage == 3 {
+		if state.Stage == 3 {
 
-    }
+		}
 
 		if len(state.YetToPlay) == 0 {
 			if state.Round >= state.RoundsPerStage {
@@ -164,12 +169,12 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 					state.Round = 0
 				} else {
 					state.Stage++
-          resp["stage"] = state.Stage
+					resp["stage"] = state.Stage
 					state.Round = 0
 				}
 			}
 			state.Round++
-      resp["round"] = state.Round
+			resp["round"] = state.Round
 			state.YetToPlay = utils.GetPlayingPlayers(state.Players)
 		} else {
 			// Pick a random player from Players
@@ -185,7 +190,7 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 			return
 		}
 		resp["success"] = "You answered."
-		resp["status"] = "incorrect"
+
 		utils.JSON(w, http.StatusOK, resp)
 	}
 }
@@ -202,6 +207,8 @@ func GetNextPlayer(queries *db.Queries) http.HandlerFunc {
 			return
 		}
 
+		log.Println("YET", state.YetToPlay)
+
 		// Pick a random player from Players
 
 		if len(state.YetToPlay) == 0 {
@@ -216,6 +223,10 @@ func GetNextPlayer(queries *db.Queries) http.HandlerFunc {
 				}
 			}
 			state.Round++
+			// Pick a random player from Players for the next round
+			state.YetToPlay = utils.GetPlayingPlayers(state.Players)
+			state.CurrentPlayer, state.YetToPlay = utils.GetCurrentPlayer(state.YetToPlay)
+
 			if state.Stage == 1 {
 
 				randomWord, err := queries.GetRandomWord(r.Context(), "6")
@@ -232,7 +243,6 @@ func GetNextPlayer(queries *db.Queries) http.HandlerFunc {
 
 		state.PlayerStartTime = time.Now().Add(time.Second * 5)
 		state.PlayerEndTime = state.PlayerStartTime.Add(time.Second * 10)
-
 		if err := utils.UpdateHopChannel(channelID, state); err != nil {
 			resp["error"] = err.Error()
 			utils.JSON(w, http.StatusBadRequest, resp)
