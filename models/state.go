@@ -11,6 +11,6 @@ type ChannelState struct {
 	RoundsPerStage int       `json:"roundsPerStage,omitempty"`
 	Stage          int       `json:"stage,omitempty"`
 	StartTime      time.Time `json:"startTime,omitempty"`
-	CurrentPlayer  Player    `json:"currentPlayer,omitempty"`
-	YetToPlay      []Player  `json:"yetToPlay,omitempty"`
+	CurrentPlayer  string    `json:"currentPlayer,omitempty"`
+	YetToPlay      []string  `json:"yetToPlay,omitempty"`
 }
