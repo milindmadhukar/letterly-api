@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/touch-some-grass-bro/letterly-api/models"
 	"github.com/touch-some-grass-bro/letterly-api/utils"
 )
 
@@ -32,16 +31,35 @@ func StartGame() http.HandlerFunc {
 			return
 		}
 
-    newState := &models.ChannelState{
-    	Game:           "started",
-    	Round:          1,
-    	RoundsPerStage: roundsInt,
-    	Stage:          1,
-    	StartTime:      time.Now(),
+    state, err := utils.GetChannelState(channelID)
+    if err != nil {
+      resp["error"] = err.Error()
+      utils.JSON(w, http.StatusBadRequest, resp)
+      return
     }
 
+    if state.Game == "started" {
+      resp["error"] = "Game already started."
+      utils.JSON(w, http.StatusBadRequest, resp)
+      return
+    }
 
-		if err := utils.UpdateHopChannel(channelID, newState); err != nil {
+    for idx := range state.Players {
+      state.Players[idx].IsPlaying = true
+      state.Players[idx].Score = 0
+    }
+
+    state.Game = "started"
+    state.Round = 1
+    state.RoundsPerStage = roundsInt
+    state.Stage = 1
+    state.StartTime = time.Now()
+
+    state.YetToPlay = utils.GetPlayingPlayers(state.Players)
+    // Pick a random player from Players
+    state.CurrentPlayer, state.YetToPlay = utils.GetCurrentPlayer(state.YetToPlay)
+
+		if err := utils.UpdateHopChannel(channelID, state); err != nil {
 			resp["error"] = err.Error()
 			utils.JSON(w, http.StatusBadRequest, resp)
 			return
