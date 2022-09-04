@@ -72,19 +72,19 @@ func ExecuteHopRequest(endpoint, reqMethod string, reqBody io.Reader, params map
 }
 
 func CreateHopChannel(hostSessionID, username string) (*hopChannel, error) {
-  player := models.Player{
-  	UserName:  username,
-  	Score:     0,
-  	IsPlaying: false,
-  }
 	reqBody, err := json.Marshal(map[string]interface{}{
 		"type": "unprotected",
 		"state": map[string]interface{}{
 			"game": "created",
 			"host": hostSessionID,
 			// Create a state players object as a map of sessionID to player name
-			"players": map[string]models.Player{
-				hostSessionID: player,
+			"players": []models.Player{
+        {
+          SessionID: hostSessionID,
+        	UserName:  username,
+        	Score:     0,
+        	IsPlaying: false,
+        },
 			},
       "playerCount": 1,
 		},
