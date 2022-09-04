@@ -21,13 +21,14 @@ func GetCurrentPlayer(players []string) (string, []string) {
   rand.Seed(time.Now().UnixNano())
   idx := rand.Intn(len(players))
   // Remove element at idx
+  currPlayer := players[idx]
   remaining := removeIndex(players, idx)
   remainingSessions := make([]string, 0)
   for _, player := range remaining {
    remainingSessions = append(remainingSessions, player)
   }
 
-  return players[idx], remainingSessions
+  return currPlayer, remainingSessions
 
 }
 

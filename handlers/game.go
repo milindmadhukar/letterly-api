@@ -106,6 +106,12 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 			return
 		}
 
+    if word == "" {
+      resp["error"] = "No word provided."
+      utils.JSON(w, http.StatusBadRequest, resp)
+      return
+    }
+
 		timeRemaining := state.PlayerEndTime.Sub(time.Now())
 		if timeRemaining < 0 {
 			resp["error"] = "Time's up."
@@ -133,10 +139,13 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 			return
 		}
 
-		if utils.IsLastLetterMatching(state.Stage1Word, word) {
-			player_idx := utils.FindPlayer(state.CurrentPlayer, state.Players)
-			state.Players[player_idx].Score += int(timeRemaining)*10 + len(word)
-      resp["status"] = "correct"
+		if state.Stage == 1 {
+			if utils.IsLastLetterMatching(state.Stage1Word, word) {
+				player_idx := utils.FindPlayer(state.CurrentPlayer, state.Players)
+				state.Players[player_idx].Score += int(timeRemaining)*10 + len(word)
+				state.Stage1Word = word
+				resp["status"] = "correct"
+			}
 		}
 
 		if len(state.YetToPlay) == 0 {
@@ -147,14 +156,12 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 					state.Round = 0
 				} else {
 					state.Stage++
+          resp["stage"] = state.Stage
 					state.Round = 0
 				}
 			}
 			state.Round++
-
-			if state.Stage == 1 {
-				state.Stage1Word = word
-			}
+      resp["round"] = state.Round
 			state.YetToPlay = utils.GetPlayingPlayers(state.Players)
 		} else {
 			// Pick a random player from Players
@@ -170,7 +177,7 @@ func AnswerQuestion(queries *db.Queries) http.HandlerFunc {
 			return
 		}
 		resp["success"] = "You answered."
-    resp["status"] = "incorrect"
+		resp["status"] = "incorrect"
 		utils.JSON(w, http.StatusOK, resp)
 	}
 }
